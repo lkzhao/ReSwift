@@ -19,10 +19,29 @@ public protocol StoreSubscriber: AnyStoreSubscriber {
     func newState(state: StoreSubscriberStateType)
 }
 
+private protocol IsOptional {
+    var objectValue: AnyObject? { get }
+}
+
+extension Optional: IsOptional {
+
+    var objectValue: AnyObject? {
+        switch self {
+        case .none:
+            return nil
+        case .some(let wrapped):
+            return wrapped as AnyObject
+        }
+    }
+
+}
+
 extension StoreSubscriber {
     // swiftlint:disable:next identifier_name
     public func _newState(state: Any) {
-        if let typedState = state as? StoreSubscriberStateType {
+        if let state = state as? IsOptional {
+            newState(state: state.objectValue as! StoreSubscriberStateType)
+        } else if let typedState = state as? StoreSubscriberStateType {
             newState(state: typedState)
         }
     }
